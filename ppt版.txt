@@ -1,0 +1,243 @@
+
+
+function varargout = untitled(varargin)
+
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @untitled_OpeningFcn, ...
+                   'gui_OutputFcn',  @untitled_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+
+% --- Executes just before untitled is made visible.
+function untitled_OpeningFcn(hObject, eventdata, handles, varargin)
+
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+
+% UIWAIT makes untitled wait for user response (see UIRESUME)
+% uiwait(handles.figure1);
+
+
+% --- Outputs from this function are returned to the command line.
+function varargout = untitled_OutputFcn(hObject, eventdata, handles) 
+
+varargout{1} = handles.output;
+
+
+% --- Executes on button press in open.
+
+function open_Callback(hObject, eventdata, handles)
+%选择图片，可以是以下格式（*这个符号是通配符，表示可以是任意长度的任意字符）
+    [filename,pathname]=uigetfile({'*.*';'*.bmp';'*.jpg';'*.tif';'*.jpeg'},'选择图像');
+    %将im定义成全局变量，这样在代码的任何位置都可以使用im了。
+    global im;
+    %如果没有输入路径，则弹出错误对话框 
+    if isequal(filename,0)||isequal(pathname,0)
+      errordlg('您还没有选取图片！！','请选择图片');
+      return;
+    else
+        %合成路径+文件名
+        image=[pathname,filename];
+        %读取图像
+        im=imread(image);
+        gray = rgb2gray(im);
+        %打开坐标，方便操作
+        set(handles.before,'HandleVisibility','ON');
+        %使用图像，操作在坐标before里
+        axes(handles.before);
+        %在坐标图before里显示原图像 
+        imshow(gray);
+        title(['原图像']);
+        
+    end
+
+
+
+% --- Executes on button press in mean.%均值除噪
+function mean_Callback(hObject, eventdata, handles)
+        global Xnoised;
+        global X;
+        g1 = imfilter(Xnoised,fspecial('average') );%均值滤波%fspecial('average')
+        P = psnr(X,g1);
+        p = ssim(X,g1);
+        set(handles.final,'HandleVisibility','ON');
+        %使用图像，操作在坐标before里
+        axes(handles.final);
+        %在坐标图before里显示原图像 
+        %imshow(im);
+        imshow(g1);
+        title(['去噪后 PSNR = ',num2str(P),'   SSIM = ',num2str(p)]);
+
+
+
+function edit1_Callback(hObject, eventdata, handles)
+
+
+% --- Executes during object creation, after setting all properties. 接受噪声系数
+function edit1_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+% --- Executes during object creation, after setting all properties.
+function noise_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in clc.清除内容
+function clc_Callback(hObject, eventdata, handles)
+clc;
+set(handles.edit1,'string','');
+%清除图片
+
+
+ delete(allchild(handles.after));
+ delete(allchild(handles.before));
+ delete(allchild(handles.final));
+ cla reset
+ clear all
+ axis off
+
+
+
+% --- Executes on button press in Addnoise.加高斯噪音
+function Addnoise_Callback(hObject, eventdata, handles)
+                       %打开坐标，方便操作
+                global im;
+                global Xnoised;
+                global X;
+                I=im;
+                X=rgb2gray(I);                    
+        
+        t =str2double( get(handles.edit1,'String'));
+        Xnoised=imnoise(X,'gaussian',0,t);
+        set(handles.after,'HandleVisibility','ON');
+        %使用图像，操作在坐标after里
+        axes(handles.after);
+        %在坐标图before里显示原图像 
+        %imshow(im);
+        imshow(Xnoised);
+        title(['加高斯噪声']);
+    
+
+
+
+% --- Executes on button press in pushbutton7. 加椒盐噪声
+function pushbutton7_Callback(hObject, eventdata, handles)
+                       %打开坐标，方便操作
+                global im;
+                global Xnoised;
+                global X;
+                I=im;
+                X=rgb2gray(I);
+
+                        %给图像加噪
+        
+               t =str2double( get(handles.edit1,'String'));
+               Xnoised=imnoise(X,'salt & pepper',t);
+               set(handles.after,'HandleVisibility','ON');
+               %使用图像，操作在坐标after里
+               axes(handles.after);
+               %在坐标图before里显示原图像 
+               %imshow(im);
+               imshow(Xnoised);
+               title(['加椒盐噪声']);
+         
+% --- Executes on button press in pushbutton10. 加泊松噪声
+function pushbutton10_Callback(hObject, eventdata, handles)
+                       %打开坐标，方便操作
+                global im;
+                global Xnoised;
+                global X;
+                I=im;
+                X=rgb2gray(I);
+
+                       
+        
+               t =str2double( get(handles.edit1,'String'));
+               Xnoised=imnoise(X,'poisson');
+               set(handles.after,'HandleVisibility','ON');
+               %使用图像，操作在坐标after里
+               axes(handles.after);
+               %在坐标图before里显示原图像 
+               %imshow(im);
+               imshow(Xnoised);
+               title(['加泊松噪声']);
+% --- Executes on button press in pushbutton10. 加乘性噪声
+function pushbutton11_Callback(hObject, eventdata, handles)
+                       %打开坐标，方便操作
+                global im;
+                global Xnoised;
+                global X;
+                I=im;
+                X=rgb2gray(I);
+
+                        %给图像加噪
+        
+               t =str2double( get(handles.edit1,'String'));
+               Xnoised=imnoise(X,'speckle',t);
+               set(handles.after,'HandleVisibility','ON');
+               %使用图像，操作在坐标after里
+               axes(handles.after);
+               %在坐标图before里显示原图像 
+               %imshow(im);
+               imshow(Xnoised);
+               title(['加乘性噪声']);
+               
+
+% --- Executes on button press in gaosi.中值滤波
+function gaosi_Callback(hObject, eventdata, handles)
+        global Xnoised;
+        global X;
+        
+        g1 = medfilt2(Xnoised, [3 3]); %3*3中值滤波
+        P = psnr(X,g1);
+        p = ssim(X,g1);
+        set(handles.final,'HandleVisibility','ON');
+        %使用图像，操作在坐标before里
+        axes(handles.final);
+        %在坐标图before里显示原图像 
+        %imshow(im);
+        imshow(g1);
+       title(['(3*3)去噪后 PSNR = ',num2str(P),'   SSIM = ',num2str(p)]);
+% --- Executes on button press in pushbutton12.维纳滤波
+function pushbutton12_Callback(hObject, eventdata, handles)
+        global Xnoised;
+        global X;
+        
+        g1 = wiener2(Xnoised, [3 3]); %5*5中值滤波
+        P = psnr(X,g1);
+        p = ssim(X,g1);
+        set(handles.final,'HandleVisibility','ON');
+        %使用图像，操作在坐标before里
+        axes(handles.final);
+        %在坐标图before里显示原图像 
+        %imshow(im);
+        imshow(g1);
+       title(['3*3去噪后 PSNR = ',num2str(P),'   SSIM = ',num2str(p)]);
+
+
+
+
+
